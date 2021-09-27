@@ -1,0 +1,57 @@
+{
+  "name": "@goairheads/directus-stdextension-builder",
+  "version": "9.0.0-dev",
+  "description": "A toolkit to develop extensions to extend Directus.",
+  "main": "dist/cjs/index.js",
+  "author": "LittleBigBug (Ethan Jones)",
+  "license": "LGPL-3.0",
+  "types": "dist/esm/index.d.ts",
+  "bin": {
+    "directus-stdextension-builder": "cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./cli": {
+      "import": "./dist/esm/cli/index.js",
+      "require": "./dist/cjs/cli/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "run-p \"build:* {@}\"",
+    "build:esm": "tsc --project ./tsconfig.json --module ESNext --outDir ./dist/esm",
+    "build:cjs": "tsc --project ./tsconfig.json --module CommonJS --outDir ./dist/cjs",
+    "cleanup": "rimraf ./dist",
+    "dev": "npm run build -- -w --preserveWatchOutput --incremental"
+  },
+  "engines": {
+    "node": ">=12.20.0"
+  },
+  "dependencies": {
+    "@directus/shared": "file:/home/ethan/Projects/directus/packages/shared",
+    "@rollup/plugin-commonjs": "^20.0.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^13.0.5",
+    "@rollup/plugin-replace": "^3.0.0",
+    "chalk": "^4.1.2",
+    "fs-extra": "^10.0.0",
+    "ora": "^5.4.1",
+    "rollup": "^2.57.0",
+    "rollup-plugin-styles": "^3.14.1",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-typescript2": "^0.30.0",
+    "rollup-plugin-vue": "^6.0.0",
+    "threads": "^1.7.0",
+    "tslib": "^2.3.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^9.0.13",
+    "@types/node": "^16.10.1",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.4.3"
+  }
+}

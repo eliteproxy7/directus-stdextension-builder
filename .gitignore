@@ -1,0 +1,9 @@
+# Jetbrains
+*.iml
+.idea/
+
+# Yarn/Npm & Building
+node_modules/
+dist/
+yarn.lock
+package.lock
