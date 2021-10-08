@@ -54,6 +54,17 @@ In package.json:
 }
 ```
 
+You may need to increase the "Old memory size" option in node before building.
+Depending on your RAM you may need to try different sizes, with 8GB (8192MB):
+
+```json
+{
+  "scripts": {
+    "build": "export NODE_OPTIONS=--max-old-space-size=8192 && directus-stdextension-builder build"
+  }
+}
+```
+
 then:
 
 ```
