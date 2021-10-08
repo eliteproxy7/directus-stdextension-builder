@@ -76,7 +76,7 @@ function getRollupOutputOptions(type: ExtensionType, name: string, output: strin
             name,
             file: output,
             format: 'cjs',
-            // exports: 'default',
+            exports: 'default',
         };
     }
 }

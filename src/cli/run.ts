@@ -14,7 +14,6 @@ program
     .option('-i, --input <file>', 'overwrite the default extensions sources folder (src/extensions/)')
     .option('-o, --output <file>', 'overwrite the default output folder (extensions/)')
     .option('-l, --language <language>', 'overwrite the language to use')
-    .option('-f, --force', 'ignore the package manifest')
     .option('-w, --watch', 'watch and rebuild on changes')
     .action(buildCommand);
 
