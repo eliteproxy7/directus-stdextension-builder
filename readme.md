@@ -3,7 +3,7 @@
 A fork of [extensions-sdk](https://github.com/directus/directus/tree/main/packages/extensions-sdk) (without scaffolding)
 that builds many extensions for [Directus](https://directus.io) into multiple modules concurrently.
 
-Uses [threads.js](https://threads.js.org/) for workers to bundle multiple components using [Rollup](https://rollupjs.org/)
+Uses [threads.js](https://threads.js.org/) for workers to bundle multiple components using [Rollup](https://rollupjs.org/) and [Babel](https://babeljs.io/)
 into the following tree that is dynamically loaded by directus:
 
 ```

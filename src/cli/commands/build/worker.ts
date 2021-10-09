@@ -7,21 +7,18 @@ import { Observable, Subject } from 'threads/observable';
 
 import chalk from 'chalk';
 
-import { Language } from '../../types';
 import { getRollupOptions, getRollupOutputOptions, handleRollupError } from "../../utils/rollup-settings";
 
 let moduleEntrypoint: string;
 let outputPath: string;
-let extensionLanguage: Language;
 let buildExtensionType: ExtensionType;
 let buildConfig: Record<string, any> | undefined;
 
 let spinnerSubject = new Subject();
 
-function prepareBuild(path: string, output: string, language: Language, extensionType: ExtensionType, config?: Record<string, any>) {
+function prepareBuild(path: string, output: string, extensionType: ExtensionType, config?: Record<string, any>) {
     moduleEntrypoint = path;
     outputPath = output;
-    extensionLanguage = language;
     buildExtensionType = extensionType;
     buildConfig = config;
 }
@@ -31,7 +28,7 @@ async function build(watch: boolean = false) {
         return buildAndWatch();
     }
 
-    let rollupOptions = getRollupOptions(buildExtensionType, extensionLanguage, moduleEntrypoint, buildConfig?.plugins);
+    let rollupOptions = getRollupOptions(buildExtensionType, moduleEntrypoint, buildConfig?.plugins);
     const rollupOutputOptions = getRollupOutputOptions(buildExtensionType, moduleEntrypoint, outputPath);
 
     try {
@@ -55,7 +52,7 @@ async function build(watch: boolean = false) {
 }
 
 async function buildAndWatch() {
-    let rollupOptions = getRollupOptions(buildExtensionType, extensionLanguage, moduleEntrypoint, buildConfig?.plugins);
+    let rollupOptions = getRollupOptions(buildExtensionType, moduleEntrypoint, buildConfig?.plugins);
     const rollupOutputOptions = getRollupOutputOptions(buildExtensionType, moduleEntrypoint, outputPath);
 
     const watcher = rollupWatch({

@@ -143,7 +143,6 @@ export default async function buildCommand(options: BuildOptions): Promise<void>
         const outputPath = inputModule.output;
         const extensionType = inputModule.extensionType;
         const spinner = inputModule.spinner;
-        const language = getLanguageFromPath(inputPath);
 
         prebuildSpinner.text = 'Starting workers...';
         spinner.start();
@@ -172,7 +171,7 @@ export default async function buildCommand(options: BuildOptions): Promise<void>
             });
 
             /* @ts-ignore */
-            worker.prepareBuild(inputPath, outputPath, language, extensionType, config);
+            worker.prepareBuild(inputPath, outputPath, extensionType, config);
             /* @ts-ignore */
             await worker.build(options.watch);
         }).then(() => {

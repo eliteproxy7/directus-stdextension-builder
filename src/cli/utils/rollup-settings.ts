@@ -1,39 +1,50 @@
-import {ExtensionType} from '@directus/shared/types';
-import {Language} from '../types';
-import {OutputOptions as RollupOutputOptions, Plugin, RollupError, RollupOptions} from 'rollup';
-import {isAppExtension} from '@directus/shared/utils';
-import {API_SHARED_DEPS, APP_SHARED_DEPS} from '@directus/shared/constants';
+import { ExtensionType } from '@directus/shared/types';
+import { OutputOptions as RollupOutputOptions, Plugin, RollupError, RollupOptions } from 'rollup';
+import { isAppExtension } from '@directus/shared/utils';
 
 import log from './logger';
+import { APP_SHARED_DEPS, API_SHARED_DEPS } from '../types';
+
 import chalk from 'chalk';
 
+import babel from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import replace from '@rollup/plugin-replace';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
 import vue from 'rollup-plugin-vue';
-import typescript from 'rollup-plugin-typescript2';
 import styles from 'rollup-plugin-styles';
+
+const extensions = [
+    '.js', '.jsx', '.ts', '.tsx',
+];
 
 function getRollupOptions(
     type: ExtensionType,
-    language: Language,
     input: string,
     plugins: Plugin[] = []
 ): RollupOptions {
+
     if (isAppExtension(type)) {
         return {
             input,
             external: APP_SHARED_DEPS,
             plugins: [
                 vue({ preprocessStyles: true }),
-                language === 'typescript' ? typescript({ check: false }) : null,
                 styles(),
                 ...plugins,
-                nodeResolve({ browser: true }),
-                commonjs({ esmExternals: true, sourceMap: false }),
+                nodeResolve({ extensions, browser: true, }),
+                commonjs({ esmExternals: true, sourceMap: false, exclude: 'node_modules/**', }),
                 json(),
+                babel({
+                    extensions,
+                    babelrc: false,
+                    babelHelpers: 'bundled',
+                    include: [ 'src/**/*', ],
+                    exclude: 'node_modules/**',
+                    presets: [ '@babel/preset-env', '@babel/preset-typescript' ],
+                }),
                 replace({
                     values: {
                         'process.env.NODE_ENV': JSON.stringify('production'),
@@ -48,11 +59,17 @@ function getRollupOptions(
             input,
             external: API_SHARED_DEPS,
             plugins: [
-                language === 'typescript' ? typescript({ check: false }) : null,
                 ...plugins,
-                nodeResolve(),
-                commonjs({ sourceMap: false }),
+                nodeResolve({ extensions }),
+                commonjs({ sourceMap: false, exclude: 'node_modules/**', }),
                 json(),
+                babel({
+                    extensions,
+                    babelrc: false,
+                    babelHelpers: 'bundled',
+                    include: [ 'src/**/*' ],
+                    presets: [ '@babel/preset-env', '@babel/preset-typescript' ],
+                }),
                 replace({
                     values: {
                         'process.env.NODE_ENV': JSON.stringify('production'),
