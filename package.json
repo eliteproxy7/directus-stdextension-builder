@@ -1,11 +1,12 @@
 {
   "name": "@goairheads/directus-stdextension-builder",
-  "version": "9.0.0-dev",
+  "version": "9.0.0-rc",
   "description": "A toolkit to develop extensions to extend Directus.",
   "main": "dist/cjs/index.js",
   "author": "LittleBigBug (Ethan Jones)",
   "license": "LGPL-3.0",
   "types": "dist/esm/index.d.ts",
+  "repository": "https://github.com/GoAirheads/directus-stdextension-builder",
   "bin": {
     "directus-stdextension-builder": "cli.js"
   },
