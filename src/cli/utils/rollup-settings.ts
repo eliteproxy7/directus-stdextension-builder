@@ -7,7 +7,7 @@ import { APP_SHARED_DEPS, API_SHARED_DEPS } from '../types';
 
 import chalk from 'chalk';
 
-import babel from '@rollup/plugin-babel';
+import ts from 'rollup-plugin-ts';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import replace from '@rollup/plugin-replace';
@@ -34,16 +34,20 @@ function getRollupOptions(
                 vue({ preprocessStyles: true }),
                 styles(),
                 ...plugins,
-                nodeResolve({ extensions, browser: true, }),
-                commonjs({ esmExternals: true, sourceMap: false, exclude: 'node_modules/**', }),
-                json(),
-                babel({
-                    extensions,
-                    babelrc: false,
-                    babelHelpers: 'bundled',
-                    include: [ 'src/**/*', ],
+                nodeResolve({ extensions, browser: true }),
+                commonjs({
+                    esmExternals: true, sourceMap: false,
+                    include: [ 'src/**/*', 'node_modules/directus/**', ],
                     exclude: 'node_modules/**',
-                    presets: [ '@babel/preset-env', '@babel/preset-typescript' ],
+                }),
+                json(),
+                ts({
+                    include: ['src/**/*', 'node_modules/directus/**',],
+                    exclude: 'node_modules/**',
+                    babelConfig: {
+                        babelrc: false,
+                        presets: ['@babel/preset-env', '@babel/preset-typescript'],
+                    },
                 }),
                 replace({
                     values: {
@@ -61,14 +65,19 @@ function getRollupOptions(
             plugins: [
                 ...plugins,
                 nodeResolve({ extensions }),
-                commonjs({ sourceMap: false, exclude: 'node_modules/**', }),
+                commonjs({
+                    sourceMap: false,
+                    include: [ 'src/**/*', 'node_modules/directus/**', ],
+                    exclude: 'node_modules/**',
+                }),
                 json(),
-                babel({
-                    extensions,
-                    babelrc: false,
-                    babelHelpers: 'bundled',
-                    include: [ 'src/**/*' ],
-                    presets: [ '@babel/preset-env', '@babel/preset-typescript' ],
+                ts({
+                    include: ['src/**/*', 'node_modules/directus/**',],
+                    exclude: 'node_modules/**',
+                    babelConfig: {
+                        babelrc: false,
+                        presets: ['@babel/preset-env', '@babel/preset-typescript'],
+                    },
                 }),
                 replace({
                     values: {
