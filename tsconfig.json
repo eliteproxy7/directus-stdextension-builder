@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2019",
-    "lib": ["ES2019"],
+    "lib": [
+	  "ES2019",
+	  "DOM", "DOM.Iterable"
+	],
+    "jsx": "react",
     "moduleResolution": "node",
     "declaration": true,
     "declarationMap": true,

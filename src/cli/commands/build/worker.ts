@@ -71,7 +71,7 @@ async function buildAndWatch() {
                 handleRollupError(event.error);
 
                 spinnerSubject.next({
-                    func: 'start',
+                    func: 'text',
                     pass: [ chalk.bold('Watching files for changes...') ],
                 });
                 break;
@@ -84,7 +84,7 @@ async function buildAndWatch() {
                     pass: [ chalk.bold('Done') ],
                 });
                 spinnerSubject.next({
-                    func: 'start',
+                    func: 'text',
                     pass: [ chalk.bold('Watching files for changes...') ],
                 });
                 break;

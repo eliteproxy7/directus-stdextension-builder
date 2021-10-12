@@ -1,20 +1,22 @@
-import { Command } from 'commander';
-import { buildCommand } from './commands/build';
+import React from 'react';
+import { render } from 'ink';
 
-const pkg = require('../../../package.json');
+import meow from 'meow';
 
-const program = new Command();
+import { Ui } from './commands/build';
 
-program.name('directus-stdextension-builder').usage('build [options]');
-program.version(pkg.version, '-v, --version');
+const cli = meow(`
+    Usage
+      $ directus-stdextension-builder build [options]
 
-program
-    .command('build')
-    .description('Compile directus extension modules for the automatically detected extensions/ folder')
-    .option('-i, --input <file>', 'overwrite the default extensions sources folder (src/extensions/)')
-    .option('-o, --output <file>', 'overwrite the default output folder (extensions/)')
-    .option('-l, --language <language>', 'overwrite the language to use')
-    .option('-w, --watch', 'watch and rebuild on changes')
-    .action(buildCommand);
+    Options
+      --input, -i  Overwrite the default extensions sources folder (src/extensions/)
+      --output, -o  Overwrite the default output folder (extensions/)
+      --language, -l  Overwrite the language to use
+      --watch, -w  Watch and rebuild on changes
+`);
 
-program.parse(process.argv);
+// Currently the input doesn't matter.
+// For more commands switch cli.input[0]
+
+render(React.createElement(Ui, cli.flags));

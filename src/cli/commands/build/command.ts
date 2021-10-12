@@ -1,7 +1,6 @@
 import path from 'path';
 import chalk from 'chalk';
 import fse from 'fs-extra';
-import ora, { Ora } from 'ora';
 
 import { isExtension } from '@directus/shared/utils';
 import { ExtensionType } from '@directus/shared/types';
@@ -11,49 +10,49 @@ import log from '../../utils/logger';
 import loadConfig from '../../utils/load-config';
 import { getLanguageFromPath, isLanguage, languageToShort } from '../../utils/languages';
 
+import { Ui } from './ui';
+
 import { Pool, spawn, Worker } from 'threads'
 
-type BuildOptions = {
-    type: string;
+export type BuildOptions = {
     input: string;
     output: string;
     language: string;
-    force: boolean;
     watch: boolean;
 };
 
-type ModuleInput = {
+export type ModuleInput = {
     input: string;
     output: string;
-    spinner: Ora,
     extensionType: ExtensionType;
+
+    spinnerText: string;
+    done: boolean;
 };
 
-export default async function buildCommand(options: BuildOptions): Promise<void> {
+export async function buildCommand(options: BuildOptions, uiInstance: Ui): Promise<void> {
     const input = options.input || "./src/extensions/";
     const output = options.output || "./extensions/";
 
-    const mainSpinner = ora({
-        text: 'Building Directus extensions...',
-        spinner: 'pong',
-    }).start();
-    const prebuildSpinner = ora('Checking/Cleaning working directories...').start();
-
     if (!await fse.pathExists(input)) {
-        log(`The input path ${chalk.bold(input)} doesn't exist!`, 'error');
-        process.exit(1);
-        return;
+		uiInstance.log(`The input path ${chalk.bold(input)} doesn't exist!`, 'error');
+        return Promise.reject(1);
     }
 
     if (await fse.pathExists(output)) {
         await fse.emptyDir(output);
     }
 
-    prebuildSpinner.text = 'Reading source files...';
+	uiInstance.setPrebuildText('Reading source files...');
 
     const inputFiles = await fse.promises.readdir(input);
 
     let inputBuild: ModuleInput[] = [];
+
+	function addInput(module: ModuleInput) {
+		inputBuild.push(module);
+		uiInstance.setModules(inputBuild);
+	}
 
     for (const file of inputFiles) {
         if (file.startsWith('.git')) continue;
@@ -84,7 +83,7 @@ export default async function buildCommand(options: BuildOptions): Promise<void>
             const fullModulePath = path.join(fullInputPath, moduleFile);
             const fullModuleOutPath = path.join(fullOutputPath, moduleFile);
             const fileStat = await fse.stat(fullModulePath);
-            const spinner = ora(`Building extension ${extensionType}/${moduleFile}`);
+            const spinnerText = `Building extension ${extensionType}/${moduleFile}`;
 
             if (fileStat.isDirectory()) {
                 let added: boolean = false;
@@ -98,12 +97,15 @@ export default async function buildCommand(options: BuildOptions): Promise<void>
                     added = true;
                     const fullOutput = path.join(fullModuleOutPath, 'index.js');
 
-                    inputBuild.push({
-                        input: fullInput,
-                        output: fullOutput,
-                        spinner,
-                        extensionType,
-                    })
+					addInput({
+						input: fullInput,
+						output: fullOutput,
+						extensionType,
+
+						spinnerText,
+						done: false,
+					});
+
                     break;
                 }
 
@@ -114,18 +116,20 @@ export default async function buildCommand(options: BuildOptions): Promise<void>
                 const lang = getLanguageFromPath(fullModulePath);
 
                 if (!isLanguage(lang)) {
-                    log(`${chalk.bold(lang)} isn't a supported language! ${chalk.bold(fullModulePath)}`, 'warn');
+                    uiInstance.log(`${chalk.bold(lang)} isn't a supported language! ${chalk.bold(fullModulePath)}`, 'warn');
                     continue;
                 }
 
                 const shortLang = languageToShort(lang);
                 const outputFileExt = fullOutputPath.substring(0, fullOutputPath.length - shortLang.length);
 
-                inputBuild.push({
+				addInput({
                     input: fullModulePath,
                     output: outputFileExt + 'js',
-                    spinner,
                     extensionType,
+
+					spinnerText,
+					done: false,
                 });
             }
         }
@@ -133,6 +137,8 @@ export default async function buildCommand(options: BuildOptions): Promise<void>
 
     const config = await loadConfig();
     const pool = Pool(() => spawn(new Worker('./worker')));
+
+	uiInstance.setPrebuildText('Starting workers...');
 
     for (let i = 0; i < inputBuild.length; i++) {
         const inputModule = inputBuild[i];
@@ -142,10 +148,6 @@ export default async function buildCommand(options: BuildOptions): Promise<void>
         const inputPath = inputModule.input;
         const outputPath = inputModule.output;
         const extensionType = inputModule.extensionType;
-        const spinner = inputModule.spinner;
-
-        prebuildSpinner.text = 'Starting workers...';
-        spinner.start();
 
         pool.queue(async worker => {
             if (worker == null) return;
@@ -154,37 +156,38 @@ export default async function buildCommand(options: BuildOptions): Promise<void>
             const spinObserver = worker.spinObserver();
 
             spinObserver.subscribe(({func, pass}) => {
+				let text = pass.join(' ');
+
                 switch (func) {
-                    case 'start':
-                        spinner.start(...pass);
-                        break;
                     case 'succeed':
-                        spinner.succeed(...pass);
+						text = `${chalk.green('✓')} ${text}`;
                         break;
                     case 'fail':
-                        spinner.fail(...pass);
-                        break;
-                    case 'text':
-                        spinner.text = pass.join(' ');
+						text = `${chalk.red('✕')} ${text}`;
                         break;
                 }
+
+				inputModule.spinnerText = text;
+
+				inputBuild[i] = inputModule;
+				uiInstance.setModules(inputBuild);
             });
 
             /* @ts-ignore */
             worker.prepareBuild(inputPath, outputPath, extensionType, config);
             /* @ts-ignore */
             await worker.build(options.watch);
-        }).then(() => {
-            spinner.stop();
         });
     }
 
-    prebuildSpinner.stop();
+    uiInstance.setPrebuildText('Prebuild Completed.');
+	uiInstance.setPrebuilding();
 
     await pool.completed();
 
-    mainSpinner.succeed(chalk.bold('Done!'));
+	uiInstance.setMainText('Finishing up...');
     await pool.terminate();
 
-    mainSpinner.stopAndPersist();
+	uiInstance.setMainText(chalk.bold('Done!'));
+	uiInstance.setBuilding();
 }
